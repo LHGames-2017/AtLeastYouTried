@@ -29,7 +29,7 @@
                     dico.addValue(t);
                 }
             }
-
+            
             PrintMapConsole(carte);
 
             // INSERT AI CODE HERE.
@@ -92,7 +92,7 @@
             }
         }
 
-        public void stateAction(ActionTypes action, [FromForm]string map)
+        public void stateAction(ActionTypes action, Node[,] nodes, GameInfo gameInfo)
         {
 
             switch (action.ToString())
@@ -101,11 +101,9 @@
                 //    Console.Write("Stay");
                 //    break;
                 case "MoveAction":
-                    GameInfo gameInfo = JsonConvert.DeserializeObject<GameInfo>(map);
-                    var carte = AIHelper.DeserializeMap(gameInfo.CustomSerializedMap);
                     Dictionary dico = new Dictionary();
                     Point finalPoint = dico.IsClosest(gameInfo.Player.Position, 4);
-                    AStarSearch aStarSearch = new AStarSearch(gameInfo.Player.Position, finalPoint,carte );
+                    //AStarSearch aStarSearch = new AStarSearch(gameInfo.Player.Position, finalPoint,carte );
 
                     Console.Write("Move");
                     break;
