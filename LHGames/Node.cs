@@ -15,11 +15,11 @@ namespace LHGames
         public bool IsWalkable { get; set; }
 
         /* Movement cost to get to the node */
-        public float G { get; set; }
+        public int G { get; set; }
         /* Estimated movement cost to destination point */
-        public float H { get; set; }
+        public int H { get; set; }
         /* The score of the node */
-        public float F { get { return G + H; } }
+        public int F { get { return G + H; } }
 
         /* The state of the node */
         public NodeState State { get; set; }
@@ -35,6 +35,11 @@ namespace LHGames
             IsWalkable = Type == TileType.T ? true : false;
             State = NodeState.UNTESTED;
             PreviousNode = null;
+        }
+
+        public static int GetPathCost(Point fromPos, Point toPos)
+        {
+            return Math.Abs(fromPos.X - toPos.X) + Math.Abs(fromPos.Y - toPos.Y);
         }
     }
 }
