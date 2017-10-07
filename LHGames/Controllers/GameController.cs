@@ -62,7 +62,7 @@
                 for (int j = 0; j < map.GetLength(1); j++)
                 {
                     
-                    Tile t = map[i, j];
+                    Tile t = map[j, i];
                     switch((TileContent)t.C)
                     {
                         case TileContent.House:

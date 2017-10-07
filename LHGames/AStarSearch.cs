@@ -1,8 +1,8 @@
-﻿using System;
+﻿using StarterProject.Web.Api;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using StarterProject.Web.Api;
 
 namespace LHGames
 {
@@ -11,47 +11,124 @@ namespace LHGames
         public Node StartNode { get; set; }
         public Node EndNode { get; set; }
         public Node[,] Map { get; set; }
-        public Tile[,] Carte { get; set; }
+
+        private int deltaX, deltaY;
+        private List<Node> frontier = new List<Node>();
 
         public AStarSearch(Node startNode, Node endNode, Node[,] map)
         {
             StartNode = startNode;
             EndNode = endNode;
             Map = map;
+            deltaX = map[0, 0].Position.X;
+            deltaY = map[0, 0].Position.Y;
+
+            for (int i = 0; i < Map.GetLength(0); i++)
+            {
+                for (int j = 0; j < Map.GetLength(1); j++)
+                {
+                    Node n = Map[i, j];
+                    n.H = Node.GetPathCost(n.Position, EndNode.Position);
+                }
+            }
         }
 
-        public AStarSearch(Node startNode, Node endNode, Tile [,] carte)
+        private void PrintMapConsole()
         {
-            StartNode = startNode;
-            EndNode = endNode;
-            Carte = carte;
+            for (int i = 0; i < Map.GetLength(0); i++)
+            {
+                for (int j = 0; j < Map.GetLength(1); j++)
+                {
+                    Node n = Map[j, i];
+                    Console.Write(n.F + " - ");
+                }
+                Console.Write("\n");
+            }
+        }
+
+        public List<Point> GetPath()
+        {
+            bool existingPath = Search(StartNode);
+
+            List<Point> path = new List<Point>();
+            if(existingPath)
+            {
+                Node currentNode = EndNode;
+                while (currentNode.PreviousNode != null)
+                {
+                    path.Add(currentNode.PreviousNode.Position);
+                    currentNode = currentNode.PreviousNode;
+                }
+                path.Reverse();
+            }
+
+            path.RemoveAt(path.Count - 1);
+
+            return path;
         }
 
         public bool Search(Node currentNode)
         {
-            List<Node> nextNodes = GetAdjacentWalkableNodes(currentNode);
-            nextNodes.Sort((node1, node2) => node1.F.CompareTo(node2.F));
+            currentNode.State = NodeState.CLOSED;
+            frontier.Remove(currentNode);
+            frontier.AddRange(GetAdjacentWalkableNodes(currentNode));
+            frontier.Sort((node1, node2) => node1.F.CompareTo(node2.F));
 
-
-
-            return false;
+            var n = frontier.FirstOrDefault();
+            if (n == null)
+                return false;
+            if (n.Position.X == EndNode.Position.X && n.Position.Y == EndNode.Position.Y)
+                return true;
+            else
+            {
+                return Search(n);
+                
+            }
         }
 
         private List<Node> GetAdjacentWalkableNodes(Node currentNode)
         {
             List<Node> adjacentNodes = new List<Node>();
-            int currentX = currentNode.Position.X, currentY = currentNode.Position.Y;
+            int currentX = currentNode.Position.X - deltaX, currentY = currentNode.Position.Y - deltaY;
 
-            if (Map[currentX + 1,currentY].IsWalkable)
-                adjacentNodes.Add(Map[currentX + 1,currentY]);
-            if (Map[currentX - 1,currentY].IsWalkable)
-                adjacentNodes.Add(Map[currentX - 1,currentY]);
-            if (Map[currentX,currentY + 1].IsWalkable)
-                adjacentNodes.Add(Map[currentX,currentY + 1]);
-            if (Map[currentX,currentY - 1].IsWalkable)
-                adjacentNodes.Add(Map[currentX,currentY - 1]);
+            if(currentX < Map.GetLength(0) - 1)
+                adjacentNodes.Add(Map[currentX + 1, currentY]);
+            if (currentX > 0)
+                adjacentNodes.Add(Map[currentX - 1, currentY]);
+            if (currentY < Map.GetLength(1) - 1)
+                adjacentNodes.Add(Map[currentX, currentY + 1]);
+            if (currentY > 0)
+                adjacentNodes.Add(Map[currentX, currentY - 1]);
 
-            return adjacentNodes;
+            List<Node> walkableNodes = new List<Node>();
+
+            foreach(Node n in adjacentNodes)
+            {
+                if (n.State == NodeState.CLOSED)
+                    continue;
+
+                if (!n.IsWalkable && n.Position.X != EndNode.Position.X && n.Position.Y != EndNode.Position.Y)
+                    continue;
+
+                if(n.State == NodeState.OPENED)
+                {
+                    int pathCost = Node.GetPathCost(n.Position, n.PreviousNode.Position);
+                    int gTemp = currentNode.G + pathCost;
+                    if(gTemp < n.G)
+                    {
+                        n.PreviousNode = currentNode;
+                        walkableNodes.Add(n);
+                    }
+                }
+                else
+                {
+                    n.PreviousNode = currentNode;
+                    n.State = NodeState.OPENED;
+                    walkableNodes.Add(n);
+                }
+            }
+
+            return walkableNodes;
 
         }
     }

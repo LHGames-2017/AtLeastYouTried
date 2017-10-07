@@ -15,11 +15,22 @@ namespace LHGames
         public bool IsWalkable { get; set; }
 
         /* Movement cost to get to the node */
-        public float G { get; set; }
+        public int G {
+            get
+            {
+                int gValue = 0;
+                Node currentNode = this;
+                while (currentNode.PreviousNode != null)
+                {
+                    gValue++;
+                    currentNode = currentNode.PreviousNode;
+                }
+                return gValue;
+            } private set { G = value; } }
         /* Estimated movement cost to destination point */
-        public float H { get; set; }
+        public int H { get; set; }
         /* The score of the node */
-        public float F { get { return G + H; } }
+        public int F { get { return G + H; } }
 
         /* The state of the node */
         public NodeState State { get; set; }
