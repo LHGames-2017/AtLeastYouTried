@@ -5,6 +5,7 @@
     using Microsoft.AspNetCore.Mvc;
     using Newtonsoft.Json;
     using LHGames;
+    using StarterProject.Web.Api.Dictionnary;
 
     [Route("/")]
     public class GameController : Controller
@@ -18,12 +19,14 @@
             var carte = AIHelper.DeserializeMap(gameInfo.CustomSerializedMap);
 
             Node[,] nodes = new Node[carte.GetLength(0), carte.GetLength(1)];
+            Dictionary dico = new Dictionary();
             for (int i = 0; i < carte.GetLength(0); i++)
             {
                 for (int j = 0; j < carte.GetLength(1); j++)
                 {
                     Tile t = carte[i, j];
                     nodes[i, j] = new Node(t.C, t.X, t.Y);
+                    dico.addValue(t);
                 }
             }
 
@@ -35,6 +38,21 @@
 
             string action = AIHelper.CreateMoveAction(pos);
             return action;
+        }
+
+        public void updateDico(Tile[,] map, Dictionary dico)
+        {
+            for (int i =0; i < map.GetLength(0);i++)
+            {
+                for (int j=0; j < map.GetLength(1); j++)
+                {
+                    Tile t = map[i, j];
+                    if (!dico.IsPresent(t))
+                    {
+                        dico.addValue(t);
+                    }
+                }
+            }
         }
 
         private void PrintMapConsole(Tile[,] map)
@@ -71,6 +89,45 @@
                     }
                 }
                 Console.Write("\n");
+            }
+        }
+
+        public void stateAction(ActionTypes action, [FromForm]string map)
+        {
+
+            switch (action.ToString())
+            {
+                //case "DefaultAction":
+                //    Console.Write("Stay");
+                //    break;
+                case "MoveAction":
+                    GameInfo gameInfo = JsonConvert.DeserializeObject<GameInfo>(map);
+                    var carte = AIHelper.DeserializeMap(gameInfo.CustomSerializedMap);
+                    Dictionary dico = new Dictionary();
+                    Point finalPoint = dico.IsClosest(gameInfo.Player.Position, 4);
+                    AStarSearch aStarSearch = new AStarSearch(gameInfo.Player.Position, finalPoint,carte );
+
+                    Console.Write("Move");
+                    break;
+                //case "AttackAction":
+                //    Console.Write("Attack");
+                //    break;
+                case "CollectAction":
+
+                    Console.Write("Collect");
+                    break;
+                //case "UpgradeAction":
+                //    Console.Write("Upgrade");
+                //    break;
+                //case "StealAction":
+                //    Console.Write("Steal");
+                //    break;
+                //case "PurchaseAction":
+                //    Console.Write("Purchase");
+                //    break;
+                //case "HealAction":
+                //    Console.Write("Heal");
+                //    break;
             }
         }
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using StarterProject.Web.Api;
 
 namespace LHGames
 {
@@ -10,12 +11,20 @@ namespace LHGames
         public Node StartNode { get; set; }
         public Node EndNode { get; set; }
         public Node[,] Map { get; set; }
+        public Tile[,] Carte { get; set; }
 
         public AStarSearch(Node startNode, Node endNode, Node[,] map)
         {
             StartNode = startNode;
             EndNode = endNode;
             Map = map;
+        }
+
+        public AStarSearch(Node startNode, Node endNode, Tile [,] carte)
+        {
+            StartNode = startNode;
+            EndNode = endNode;
+            Carte = carte;
         }
 
         public bool Search(Node currentNode)

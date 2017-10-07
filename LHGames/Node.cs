@@ -36,5 +36,10 @@ namespace LHGames
             State = NodeState.UNTESTED;
             PreviousNode = null;
         }
+
+        public static int GetPathCost(Point fromPos, Point toPos)
+        {
+            return Math.Abs(fromPos.X - toPos.X) + Math.Abs(fromPos.Y - toPos.Y);
+        }
     }
 }
