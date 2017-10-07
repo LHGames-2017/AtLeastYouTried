@@ -12,20 +12,37 @@ namespace LHGames
         public Node EndNode { get; set; }
         public Node[,] Map { get; set; }
 
+        private int deltaX, deltaY;
+        private List<Node> frontier = new List<Node>();
+
         public AStarSearch(Node startNode, Node endNode, Node[,] map)
         {
             StartNode = startNode;
             EndNode = endNode;
             Map = map;
+            deltaX = map[0, 0].Position.X;
+            deltaY = map[0, 0].Position.Y;
 
             for (int i = 0; i < Map.GetLength(0); i++)
             {
                 for (int j = 0; j < Map.GetLength(1); j++)
                 {
                     Node n = Map[i, j];
-                    n.G = Node.GetPathCost(StartNode.Position, n.Position);
                     n.H = Node.GetPathCost(n.Position, EndNode.Position);
                 }
+            }
+        }
+
+        private void PrintMapConsole()
+        {
+            for (int i = 0; i < Map.GetLength(0); i++)
+            {
+                for (int j = 0; j < Map.GetLength(1); j++)
+                {
+                    Node n = Map[j, i];
+                    Console.Write(n.F + " - ");
+                }
+                Console.Write("\n");
             }
         }
 
@@ -37,41 +54,51 @@ namespace LHGames
             if(existingPath)
             {
                 Node currentNode = EndNode;
-                while(currentNode.PreviousNode != null)
+                while (currentNode.PreviousNode != null)
+                {
                     path.Add(currentNode.PreviousNode.Position);
+                    currentNode = currentNode.PreviousNode;
+                }
                 path.Reverse();
-            }        
+            }
+
+            path.RemoveAt(path.Count - 1);
 
             return path;
         }
 
         public bool Search(Node currentNode)
         {
-            List<Node> nextNodes = GetAdjacentWalkableNodes(currentNode);
-            nextNodes.Sort((node1, node2) => node1.F.CompareTo(node2.F));
+            currentNode.State = NodeState.CLOSED;
+            frontier.Remove(currentNode);
+            frontier.AddRange(GetAdjacentWalkableNodes(currentNode));
+            frontier.Sort((node1, node2) => node1.F.CompareTo(node2.F));
 
-            foreach(Node n in nextNodes)
+            var n = frontier.FirstOrDefault();
+            if (n == null)
+                return false;
+            if (n.Position.X == EndNode.Position.X && n.Position.Y == EndNode.Position.Y)
+                return true;
+            else
             {
-                if (n.Position == EndNode.Position)
-                    return true;
-                else
-                {
-                    if (Search(n))
-                        return true;
-                }
+                return Search(n);
+                
             }
-            return false;
         }
 
         private List<Node> GetAdjacentWalkableNodes(Node currentNode)
         {
             List<Node> adjacentNodes = new List<Node>();
-            int currentX = currentNode.Position.X, currentY = currentNode.Position.Y;
+            int currentX = currentNode.Position.X - deltaX, currentY = currentNode.Position.Y - deltaY;
 
-            adjacentNodes.Add(Map[currentX + 1,currentY]);
-            adjacentNodes.Add(Map[currentX - 1,currentY]);
-            adjacentNodes.Add(Map[currentX,currentY + 1]);
-            adjacentNodes.Add(Map[currentX,currentY - 1]);
+            if(currentX < Map.GetLength(0) - 1)
+                adjacentNodes.Add(Map[currentX + 1, currentY]);
+            if (currentX > 0)
+                adjacentNodes.Add(Map[currentX - 1, currentY]);
+            if (currentY < Map.GetLength(1) - 1)
+                adjacentNodes.Add(Map[currentX, currentY + 1]);
+            if (currentY > 0)
+                adjacentNodes.Add(Map[currentX, currentY - 1]);
 
             List<Node> walkableNodes = new List<Node>();
 
@@ -80,7 +107,7 @@ namespace LHGames
                 if (n.State == NodeState.CLOSED)
                     continue;
 
-                if (!n.IsWalkable)
+                if (!n.IsWalkable && n.Position.X != EndNode.Position.X && n.Position.Y != EndNode.Position.Y)
                     continue;
 
                 if(n.State == NodeState.OPENED)
@@ -101,7 +128,7 @@ namespace LHGames
                 }
             }
 
-            return adjacentNodes;
+            return walkableNodes;
 
         }
     }
