@@ -43,7 +43,7 @@ namespace LHGames
         {
             Position = new Point(X, Y);
             Type = (TileType)C;
-            IsWalkable = Type == TileType.T ? true : false;
+            IsWalkable = (Type == TileType.T || Type == TileType.H)  ? true : false;
             State = NodeState.UNTESTED;
             PreviousNode = null;
         }
