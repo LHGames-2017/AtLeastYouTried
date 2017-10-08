@@ -11,32 +11,41 @@
     public class GameController : Controller
     {
         AIHelper player = new AIHelper();
+        ActionTypes gameState = ActionTypes.DefaultAction;
+        List<Point> currentPath = new List<Point>();
+        List<Node> resources = new List<Node>();
+        Node house;
+        bool canUpdate = true;
+        Node[,] nodes;
 
         [HttpPost]
         public string Index([FromForm]string map)
         {
             GameInfo gameInfo = JsonConvert.DeserializeObject<GameInfo>(map);
             var carte = AIHelper.DeserializeMap(gameInfo.CustomSerializedMap);
+            if (canUpdate)
+            {             
 
-            Node[,] nodes = new Node[carte.GetLength(0), carte.GetLength(1)];
-            Dictionary dico = new Dictionary();
-            for (int i = 0; i < carte.GetLength(0); i++)
-            {
-                for (int j = 0; j < carte.GetLength(1); j++)
+                nodes = new Node[carte.GetLength(0), carte.GetLength(1)];
+                for (int i = 0; i < carte.GetLength(0); i++)
                 {
-                    Tile t = carte[i, j];
-                    nodes[i, j] = new Node(t.C, t.X, t.Y);
-                    dico.addValue(t);
+                    for (int j = 0; j < carte.GetLength(1); j++)
+                    {
+                        Tile t = carte[i, j];
+                        nodes[i, j] = new Node(t.C, t.X, t.Y);
+                        if (t.C == 4)
+                            resources.Add(nodes[i, j]);
+                        if (t.C == 2)
+                            house = nodes[i, j];
+                        //dico.addValue(t);
+                    }
                 }
+                canUpdate = false;
             }
-            
+
             PrintMapConsole(carte);
 
-            // INSERT AI CODE HERE.
-
-            Point pos = new Point(gameInfo.Player.Position.X + 1, gameInfo.Player.Position.Y);
-
-            string action = AIHelper.CreateMoveAction(pos);
+            string action = StateAction(nodes, gameInfo);
             return action;
         }
 
@@ -47,10 +56,10 @@
                 for (int j=0; j < map.GetLength(1); j++)
                 {
                     Tile t = map[i, j];
-                    if (!dico.IsPresent(t))
+                    /*if (!dico.IsPresent(t))
                     {
                         dico.addValue(t);
-                    }
+                    }*/
                 }
             }
         }
@@ -92,25 +101,52 @@
             }
         }
 
-        public void stateAction(ActionTypes action, Node[,] nodes, GameInfo gameInfo)
+        public string StateAction(Node[,] nodes, GameInfo gameInfo)
         {
+            string gameAction = "";
 
-            switch (action.ToString())
+            switch (gameState)
             {
-                //case "DefaultAction":
-                //    Console.Write("Stay");
-                //    break;
-                case "MoveAction":
-                    Dictionary dico = new Dictionary();
-                    Point finalPoint = dico.IsClosest(gameInfo.Player.Position, 4);
-                    //AStarSearch aStarSearch = new AStarSearch(gameInfo.Player.Position, finalPoint,carte );
-
+                case ActionTypes.DefaultAction:
+                    if (resources.Count > 0)
+                    {
+                        foreach(Node r in resources)
+                        {
+                            AStarSearch search = new AStarSearch(new Node(6, gameInfo.Player.Position.X, gameInfo.Player.Position.Y), r, nodes);
+                            currentPath = search.GetPath();
+                            if (currentPath.Count > 0) break;
+                        }
+                        
+                        if(currentPath.Count > 1)
+                        {
+                            gameState = ActionTypes.MoveAction;
+                            gameAction = AIHelper.CreateMoveAction(currentPath[1]);
+                        }
+                    }
+                    break;
+                case ActionTypes.MoveAction:
+                    if (currentPath.Count > 0)
+                    {
+                        gameAction = AIHelper.CreateMoveAction(currentPath[0]);
+                        currentPath.RemoveAt(0);
+                    }
+                    else
+                        gameState = ActionTypes.CollectAction;
                     Console.Write("Move");
                     break;
                 //case "AttackAction":
                 //    Console.Write("Attack");
                 //    break;
-                case "CollectAction":
+                case ActionTypes.CollectAction:
+
+                    if (gameInfo.Player.CarriedResources < gameInfo.Player.CarryingCapacity)
+                        gameAction = AIHelper.CreateCollectAction(resources[0].Position);
+                    else
+                    {
+                        AStarSearch searchHouse = new AStarSearch(new Node(6, gameInfo.Player.Position.X, gameInfo.Player.Position.Y), house, nodes);
+                        currentPath = searchHouse.GetPath();
+                        gameState = ActionTypes.MoveAction;
+                    }
 
                     Console.Write("Collect");
                     break;
@@ -127,6 +163,8 @@
                 //    Console.Write("Heal");
                 //    break;
             }
+
+            return gameAction;
         }
     }
 }

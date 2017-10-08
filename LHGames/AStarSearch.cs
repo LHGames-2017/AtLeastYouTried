@@ -51,18 +51,24 @@ namespace LHGames
             bool existingPath = Search(StartNode);
 
             List<Point> path = new List<Point>();
+            List<Node> nodes = new List<Node>();
             if(existingPath)
             {
                 Node currentNode = EndNode;
+                path.Add(currentNode.Position);
+                nodes.Add(currentNode);
                 while (currentNode.PreviousNode != null)
                 {
                     path.Add(currentNode.PreviousNode.Position);
+                    nodes.Add(currentNode.PreviousNode);
                     currentNode = currentNode.PreviousNode;
                 }
                 path.Reverse();
+                nodes.Reverse();
             }
 
-            path.RemoveAt(path.Count - 1);
+            if(nodes.Count > 0 && !nodes.ElementAt(path.Count - 1).IsWalkable)
+                path.RemoveAt(path.Count - 1);
 
             return path;
         }
@@ -91,7 +97,7 @@ namespace LHGames
             List<Node> adjacentNodes = new List<Node>();
             int currentX = currentNode.Position.X - deltaX, currentY = currentNode.Position.Y - deltaY;
 
-            if(currentX < Map.GetLength(0) - 1)
+            if (currentX < Map.GetLength(0) - 1)
                 adjacentNodes.Add(Map[currentX + 1, currentY]);
             if (currentX > 0)
                 adjacentNodes.Add(Map[currentX - 1, currentY]);
@@ -102,12 +108,12 @@ namespace LHGames
 
             List<Node> walkableNodes = new List<Node>();
 
-            foreach(Node n in adjacentNodes)
+            foreach (Node n in adjacentNodes)
             {
                 if (n.State == NodeState.CLOSED)
                     continue;
 
-                if (!n.IsWalkable && n.Position.X != EndNode.Position.X && n.Position.Y != EndNode.Position.Y)
+                if (!n.IsWalkable && (n.Position.X != EndNode.Position.X && n.Position.Y != EndNode.Position.Y))
                     continue;
 
                 if(n.State == NodeState.OPENED)
