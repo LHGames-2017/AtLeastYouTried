@@ -113,7 +113,7 @@ namespace LHGames
                 if (n.State == NodeState.CLOSED)
                     continue;
 
-                if (!n.IsWalkable && (n.Position.X != EndNode.Position.X && n.Position.Y != EndNode.Position.Y))
+                if (!n.IsWalkable && n.Position != EndNode.Position)
                     continue;
 
                 if(n.State == NodeState.OPENED)

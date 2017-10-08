@@ -17,6 +17,7 @@
         Node house;
         bool canUpdate = true;
         Node[,] nodes;
+        static int resourceIndex = 0;
 
         [HttpPost]
         public string Index([FromForm]string map)
@@ -110,17 +111,32 @@
                 case ActionTypes.DefaultAction:
                     if (resources.Count > 0)
                     {
-                        foreach(Node r in resources)
+                        if (gameInfo.Player.CarriedResources < gameInfo.Player.CarryingCapacity)
                         {
-                            AStarSearch search = new AStarSearch(new Node(6, gameInfo.Player.Position.X, gameInfo.Player.Position.Y), r, nodes);
-                            currentPath = search.GetPath();
-                            if (currentPath.Count > 0) break;
+                            for (resourceIndex = 0; resourceIndex < resources.Count; resourceIndex++)
+                            {
+                                AStarSearch search = new AStarSearch(new Node(6, gameInfo.Player.Position.X, gameInfo.Player.Position.Y), resources[resourceIndex], nodes);
+                                currentPath = search.GetPath();
+                                if (currentPath.Count > 0) break;
+                            }
+
+                            if (currentPath.Count > 1)
+                            {
+                                gameState = ActionTypes.MoveAction;
+                                gameAction = AIHelper.CreateMoveAction(currentPath[1]);
+                            }
+                            else
+                                gameAction = AIHelper.CreateCollectAction(resources[resourceIndex].Position);
                         }
-                        
-                        if(currentPath.Count > 1)
+                        else
                         {
-                            gameState = ActionTypes.MoveAction;
-                            gameAction = AIHelper.CreateMoveAction(currentPath[1]);
+                            AStarSearch searchHouse = new AStarSearch(new Node(6, gameInfo.Player.Position.X, gameInfo.Player.Position.Y), house, nodes);
+                            currentPath = searchHouse.GetPath();
+                            if (currentPath.Count > 1)
+                            {
+                                gameState = ActionTypes.MoveAction;
+                                gameAction = AIHelper.CreateMoveAction(currentPath[1]);
+                            }
                         }
                     }
                     break;
