@@ -126,7 +126,12 @@
                                 gameAction = AIHelper.CreateMoveAction(currentPath[1]);
                             }
                             else
-                                gameAction = AIHelper.CreateCollectAction(resources[resourceIndex].Position);
+                            {
+                                if (resourceIndex < resources.Count)
+                                    gameAction = AIHelper.CreateCollectAction(resources[resourceIndex].Position);
+                                else
+                                    resourceIndex = 0;
+                            }
                         }
                         else
                         {
